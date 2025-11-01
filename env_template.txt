@@ -1,0 +1,8 @@
+# Environment variables for advanced caption processing
+# Copy this file to .env and fill in your actual API key
+
+# Gemini API Key for advanced NLP processing
+GEMINI_API_KEY=AIzaSyAQCROVJ5EBdYuLxai_GMLx9OJgFZmoPbc
+
+# Optional: Set to 'true' to enable debug mode
+DEBUG_MODE=false

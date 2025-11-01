@@ -1,0 +1,21 @@
+{
+    "model_settings": {
+        "model_path": "model_checkpoints/model_13.h5",
+        "max_caption_length": 80,
+        "vocab_size": 5139
+    },
+    "enhancement_settings": {
+        "enabled": true,
+        "api_key_required": false,
+        "fallback_to_original": true,
+        "processing_delay": {
+            "min": 0.5,
+            "max": 1.5
+        }
+    },
+    "ui_settings": {
+        "window_title": "Image Caption Generator Using Deep Learning",
+        "window_size": "650x650",
+        "image_thumbnail_size": [550, 500]
+    }
+}

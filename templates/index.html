@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Image Caption Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 100%;
+            text-align: center;
+            margin: 0 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 3.2em;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .feature-image-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .feature-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-image:hover {
+            transform: scale(1.02);
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 80px 40px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            max-width: 100%;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-area {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 500px;
+            width: auto;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .caption-box {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            line-height: 1.6;
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+            margin-top: 20px;
+        }
+
+        .caption-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        /* Architecture Section Styles */
+        .architecture-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .architecture-section h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            font-weight: 300;
+        }
+
+        .architecture-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
+            transition: transform 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .step-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tech-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .tech-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .tech-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .tech-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .tech-specs {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .model-architecture {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .model-architecture h3 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.3em;
+        }
+
+        .architecture-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .model-layer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 250px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .layer-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .layer-desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .model-arrow {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            margin: 0 0 30px 0;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+            overflow: hidden;
+        }
+
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            border: none;
+        }
+
+        .tab-button {
+            background: transparent;
+            border: none;
+            padding: 18px 35px;
+            font-size: 1.2em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.8);
+            position: relative;
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab-button:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: white;
+            border-radius: 2px 2px 0 0;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .tab-button:hover::before {
+            transform: translateX(100%);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h2 {
+            margin-bottom: 15px;
+            font-size: 2em;
+            font-weight: 300;
+        }
+
+        .welcome-section p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Generator Header */
+        .generator-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .generator-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .generator-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Features Section */
+        .features-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .features-section h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .feature-item p {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* Large screens - better full width utilization */
+        @media (min-width: 1200px) {
+            .container {
+                margin: 0 40px;
+                padding: 50px;
+            }
+            
+            .feature-image {
+                max-width: 90%;
+            }
+            
+            .tech-details {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 30px;
+            }
+            
+            .features-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 30px;
+            }
+            
+            .architecture-flow {
+                gap: 25px;
+            }
+            
+            .step {
+                min-width: 180px;
+                padding: 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0 10px;
+                padding: 20px;
+            }
+            
+            .feature-image {
+                max-width: 100%;
+                margin: 20px 0;
+            }
+            
+            .architecture-flow {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+            
+            .step {
+                min-width: 200px;
+            }
+            
+            .model-layer {
+                min-width: 200px;
+            }
+
+            .navbar {
+                margin: 0 0 20px 0;
+            }
+
+            .tab-navigation {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                padding: 15px 25px;
+                font-size: 1.1em;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .tab-button:last-child {
+                border-bottom: none;
+            }
+
+            .tab-button.active::after {
+                display: none;
+            }
+
+            .tab-button.active {
+                background: rgba(255, 255, 255, 0.25);
+            }
+
+            .welcome-section {
+                padding: 30px 20px;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="landingTab">📚 About & Architecture</button>
+                <button class="tab-button" data-tab="generatorTab">🚀 Generate Captions</button>
+            </div>
+        </nav>
+        
+        <h1>🎯 Image Caption Generator</h1>
+        <p class="subtitle">Deep Learning Model for Accurate Image Captioning</p>
+        
+        <!-- Feature Image -->
+        <div class="feature-image-container">
+            <img src="/feature-image-image-captioning.webp" alt="Image Captioning Feature" class="feature-image">
+        </div>
+        
+        <!-- Landing Page Tab -->
+        <div id="landingTab" class="tab-content active">
+            <div class="welcome-section">
+                <h2>Welcome to Our Advanced Image Caption Generator</h2>
+                <p>This project demonstrates a state-of-the-art deep learning model that combines Convolutional Neural Networks (CNN) and Recurrent Neural Networks (RNN/LSTM) to generate accurate, descriptive captions for images.</p>
+            </div>
+            
+            <!-- System Architecture Section -->
+            <div class="architecture-section">
+                <h2>🧠 How Our System Works</h2>
+                <div class="architecture-flow">
+                    <div class="step">
+                        <div class="step-icon">📸</div>
+                        <div class="step-title">Input Image</div>
+                        <div class="step-desc">Upload your image</div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="step">
+                        <div class="step-icon">🔍</div>
+                        <div class="step-title">CNN Feature Extraction</div>
+                        <div class="step-desc">ResNet50 extracts visual features</div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="step">
+                        <div class="step-icon">🧠</div>
+                        <div class="step-title">RNN/LSTM Processing</div>
+                        <div class="step-desc">Generates caption word by word</div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="step">
+                        <div class="step-icon">📝</div>
+                        <div class="step-title">Final Caption</div>
+                        <div class="step-desc">Accurate description</div>
+                    </div>
+                </div>
+                
+                <div class="tech-details">
+                    <div class="tech-card">
+                        <h3>🔍 CNN (Convolutional Neural Network)</h3>
+                        <p>ResNet50 architecture extracts 2048-dimensional feature vectors from images, identifying objects, colors, and visual patterns.</p>
+                        <div class="tech-specs">
+                            <strong>Architecture:</strong> ResNet50<br>
+                            <strong>Input:</strong> 224×224×3 RGB images<br>
+                            <strong>Output:</strong> 2048-dimensional feature vector<br>
+                            <strong>Layers:</strong> 50 residual layers with skip connections
+                        </div>
+                    </div>
+                    <div class="tech-card">
+                        <h3>🧠 RNN/LSTM (Recurrent Neural Networks)</h3>
+                        <p>Long Short-Term Memory networks process the visual features and generate sequential text descriptions word by word.</p>
+                        <div class="tech-specs">
+                            <strong>Architecture:</strong> LSTM with 256 hidden units<br>
+                            <strong>Embedding:</strong> 50-dimensional GloVe vectors<br>
+                            <strong>Vocabulary:</strong> 5,139 unique words<br>
+                            <strong>Max Length:</strong> 80 words per caption
+                        </div>
+                    </div>
+                    <!-- <div class="tech-card">
+                        <h3>🎯 Advanced Training</h3>
+                        <p>Our model is trained on Flickr30k dataset with advanced techniques for superior caption generation accuracy.</p>
+                        <div class="tech-specs">
+                            <strong>Dataset:</strong> Flickr30k (30,000 images)<br>
+                            <strong>Training:</strong> 15 epochs with Adam optimizer<br>
+                            <strong>Technique:</strong> Encoder-Decoder architecture<br>
+                            <strong>Performance:</strong> High accuracy captions
+                        </div>
+                    </div> -->
+                </div>
+                
+                <div class="model-architecture">
+                    <h3>🏗️ Complete Model Architecture</h3>
+                    <div class="architecture-diagram">
+                        <div class="model-layer">
+                            <div class="layer-title">Input Layer</div>
+                            <div class="layer-desc">224×224×3 RGB Image</div>
+                        </div>
+                        <div class="model-arrow">↓</div>
+                        <div class="model-layer">
+                            <div class="layer-title">CNN Feature Extractor</div>
+                            <div class="layer-desc">ResNet50 → 2048D Features</div>
+                        </div>
+                        <div class="model-arrow">↓</div>
+                        <div class="model-layer">
+                            <div class="layer-title">Dense Layer</div>
+                            <div class="layer-desc">2048 → 256 dimensions</div>
+                        </div>
+                        <div class="model-arrow">↓</div>
+                        <div class="model-layer">
+                            <div class="layer-title">LSTM Decoder</div>
+                            <div class="layer-desc">256 → Word Sequence</div>
+                        </div>
+                        <div class="model-arrow">↓</div>
+                        <div class="model-layer">
+                            <div class="layer-title">Output Layer</div>
+                            <div class="layer-desc">Final Caption</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="features-section">
+                <h2>✨ Key Features</h2>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        <h3>High Accuracy</h3>
+                        <p>Advanced deep learning model trained on large-scale dataset</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Fast Processing</h3>
+                        <p>Optimized architecture for quick caption generation</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Robust Architecture</h3>
+                        <p>Combines CNN and LSTM for comprehensive understanding</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <h3>Well Trained</h3>
+                        <p>Trained on 30,000 images with multiple captions each</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Generator Tab -->
+        <div id="generatorTab" class="tab-content">
+            <div class="generator-header">
+                <h2>🚀 Generate Image Captions</h2>
+                <p>Upload an image to get an accurate caption generated by our deep learning model</p>
+            </div>
+            
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Click to upload or drag & drop</div>
+                <div class="upload-hint">Supports JPG, PNG, and other image formats</div>
+            </div>
+            
+            <input type="file" id="fileInput" accept="image/*">
+            
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Processing image and generating caption...</p>
+            </div>
+            
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+            
+            <div class="result-area" id="resultArea">
+                <img id="imagePreview" class="image-preview" alt="Uploaded image">
+                <div class="caption-box">
+                    <div class="caption-label">📝 Generated Caption:</div>
+                    <div id="enhancedCaption"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function openTab(evt, tabName) {
+            // Prevent default behavior
+            evt.preventDefault();
+            
+            var i, tabcontent, tabbuttons;
+            
+            // Hide all tab content
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            // Remove active class from all tab buttons
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].classList.remove("active");
+            }
+            
+            // Show the selected tab content and mark button as active
+            var targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.classList.add("active");
+            }
+            
+            if (evt.currentTarget) {
+                evt.currentTarget.classList.add("active");
+            }
+            
+            // Force a reflow to ensure the change is visible
+            targetTab.offsetHeight;
+        }
+
+        // Initialize tab functionality when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click event listeners to all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    const tabName = this.getAttribute('data-tab');
+                    openTab(e, tabName);
+                });
+            });
+        });
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.querySelector('.upload-area');
+        const loading = document.querySelector('.loading');
+        const resultArea = document.getElementById('resultArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const enhancedCaption = document.getElementById('enhancedCaption');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file.');
+                return;
+            }
+
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Upload and process
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showLoading();
+            hideMessages();
+            showProcessingSteps();
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                hideProcessingSteps();
+                
+                if (data.success) {
+                    enhancedCaption.textContent = data.enhanced_caption;
+                    resultArea.style.display = 'block';
+                    showSuccess('Caption generated successfully!');
+                } else {
+                    showError(data.error || 'Failed to generate caption.');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                hideProcessingSteps();
+                showError('An error occurred while processing the image.');
+                console.error('Error:', error);
+            });
+        }
+
+        function showProcessingSteps() {
+            const steps = document.querySelectorAll('.step');
+            let currentStep = 0;
+            
+            // Reset all steps
+            steps.forEach(step => {
+                step.style.opacity = '0.5';
+                step.style.transform = 'scale(0.9)';
+            });
+            
+            const processSteps = () => {
+                if (currentStep < steps.length) {
+                    // Highlight current step
+                    steps[currentStep].style.opacity = '1';
+                    steps[currentStep].style.transform = 'scale(1.1)';
+                    steps[currentStep].style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.3)';
+                    
+                    currentStep++;
+                    setTimeout(processSteps, 2000); // 2 seconds per step
+                }
+            };
+            
+            processSteps();
+        }
+
+        function hideProcessingSteps() {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach(step => {
+                step.style.opacity = '1';
+                step.style.transform = 'scale(1)';
+                step.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+            });
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            resultArea.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
